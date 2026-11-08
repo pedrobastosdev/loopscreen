@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { deviceStorage } from './device-storage';
+import { manifestStorage, syncOfflineCache } from './offline';
 import { useDeviceSocket } from './useDeviceSocket';
 import {
   fetchManifest,
@@ -81,6 +82,8 @@ export function usePlayerSession() {
         try {
           const manifest = await fetchManifest(token);
           if (cancelled) return;
+          manifestStorage.save(manifest);
+          void syncOfflineCache(manifest).catch(() => undefined);
           setState((prev) =>
             prev.phase === 'playing' && sameManifest(prev.manifest, manifest)
               ? prev
@@ -89,21 +92,28 @@ export function usePlayerSession() {
           schedule(MANIFEST_POLL_MS);
         } catch (error) {
           // 409: ainda não pareada
-          if (error instanceof PlayerApiError && error.status === 409) await showPairing(token);
-          else throw error;
+          if (error instanceof PlayerApiError && error.status === 409) {
+            manifestStorage.clear();
+            await showPairing(token);
+          } else throw error;
         }
       } catch (error) {
         if (cancelled) return;
         if (error instanceof PlayerApiError && error.status === 401) {
           // Token desconhecido (tela removida no painel): registra de novo.
           deviceStorage.clear();
+          manifestStorage.clear();
           setToken(null);
           setState({ phase: 'starting' });
           schedule(500);
           return;
         }
-        // Sem conexão: mantém o que está na tela e tenta de novo.
-        setState((prev) => (prev.phase === 'starting' ? { phase: 'offline' } : prev));
+        // Sem conexão: mantém o que está na tela (ou o último manifest salvo) e tenta de novo.
+        setState((prev) => {
+          if (prev.phase !== 'starting' && prev.phase !== 'offline') return prev;
+          const cached = manifestStorage.load();
+          return cached ? { phase: 'playing', manifest: cached } : { phase: 'offline' };
+        });
         schedule(RETRY_MS);
       }
     }
@@ -124,6 +134,7 @@ export function usePlayerSession() {
 
   const unpaired = useCallback(() => {
     deviceStorage.clear();
+    manifestStorage.clear();
     setToken(null);
     refresh();
   }, [refresh]);

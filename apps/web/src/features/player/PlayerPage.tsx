@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { IdleScreen } from './IdleScreen';
+import { registerServiceWorker } from './offline';
 import { PairingScreen } from './PairingScreen';
 import { PlayerEngine } from './PlayerEngine';
 import { usePlayerSession } from './usePlayerSession';
@@ -9,6 +10,9 @@ import { usePlayerSession } from './usePlayerSession';
 export function PlayerPage() {
   const { state } = usePlayerSession();
 
+  useEffect(() => {
+    void registerServiceWorker();
+  }, []);
   useKeepScreenAwake();
   useDoubleClickFullscreen();
 
