@@ -35,8 +35,10 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM node:24-slim AS runner
 # openssl: exigido pelo schema engine do Prisma (migrate deploy)
 # tini: init mínimo; o Node não roda como PID 1 e encerra corretamente no SIGTERM
+# fonts-inter: fonte usada nos banners gerados pelo seed de demonstração
 RUN apt-get update \
- && apt-get install -y --no-install-recommends openssl ca-certificates tini \
+ && apt-get install -y --no-install-recommends openssl ca-certificates tini fontconfig fonts-inter \
+ && fc-cache -f \
  && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production \
     PORT=3000 \

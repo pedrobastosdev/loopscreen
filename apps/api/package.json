@@ -15,7 +15,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "seed": "tsx src/scripts/seed.ts",
-    "seed:prod": "node dist/scripts/seed.js"
+    "seed:prod": "node dist/scripts/seed.js",
+    "seed:demo": "tsx src/scripts/seed-demo.ts",
+    "seed:demo:prod": "node dist/scripts/seed-demo.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.4.0",
@@ -41,6 +43,7 @@
     "prisma": "7.10.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "sharp": "^0.35.5",
     "socket.io": "^4.8.4",
     "zod": "^4.6.7"
   },
