@@ -125,17 +125,26 @@ export class MediaService {
   }
 
   private toDto(media: MediaWithCount): MediaDto {
-    return {
-      id: media.id,
-      name: media.name,
-      type: media.type,
-      mimeType: media.mimeType,
-      size: media.size,
-      url: this.storage.publicUrl(media.filename),
-      usageCount: media._count.items,
-      createdAt: media.createdAt,
-    };
+    return toMediaDto(media, media._count.items, (key) => this.storage.publicUrl(key));
   }
+}
+
+/** Converte o registro do banco no formato da API (usado também pelas playlists). */
+export function toMediaDto(
+  media: Media,
+  usageCount: number,
+  publicUrl: (filename: string) => string,
+): MediaDto {
+  return {
+    id: media.id,
+    name: media.name,
+    type: media.type,
+    mimeType: media.mimeType,
+    size: media.size,
+    url: publicUrl(media.filename),
+    usageCount,
+    createdAt: media.createdAt,
+  };
 }
 
 /** Nome amigável a partir do nome original do arquivo. */

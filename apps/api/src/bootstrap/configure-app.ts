@@ -1,10 +1,10 @@
 import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { createValidationPipe } from '../common/validation.js';
 import type { Env } from '../config/env.js';
 import { securityHeaders } from './security.js';
 
@@ -20,9 +20,7 @@ export function configureApp(app: NestExpressApplication): void {
   app.use(securityHeaders());
 
   app.setGlobalPrefix(API_PREFIX);
-  app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
-  );
+  app.useGlobalPipes(createValidationPipe());
 
   const uploadDir = resolve(config.get('UPLOAD_DIR', { infer: true }));
   mkdirSync(uploadDir, { recursive: true });

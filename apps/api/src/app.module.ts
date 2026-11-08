@@ -10,6 +10,7 @@ import { validateEnv, type Env } from './config/env.js';
 import { MediaModule } from './media/media.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { HealthModule } from './health/health.module.js';
+import { PlaylistsModule } from './playlists/playlists.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { resolveWebDistDir, webStaticOptions } from './web/web-static.js';
 
@@ -29,6 +30,7 @@ import { resolveWebDistDir, webStaticOptions } from './web/web-static.js';
     AuthModule,
     StorageModule,
     MediaModule,
+    PlaylistsModule,
     HealthModule,
   ],
   providers: [

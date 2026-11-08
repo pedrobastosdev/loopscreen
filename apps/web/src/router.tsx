@@ -18,7 +18,21 @@ export const router = createBrowserRouter([
           { path: 'screens', element: <ScreensPage /> },
           { path: 'media', element: <MediaPage /> },
           { path: 'playlists', element: <PlaylistsPage /> },
+          {
+            path: 'playlists/:playlistId',
+            // dnd-kit fica num chunk separado
+            lazy: async () => ({
+              Component: (await import('@/features/playlists/PlaylistEditorPage'))
+                .PlaylistEditorPage,
+            }),
+          },
         ],
+      },
+      {
+        path: 'preview/:playlistId',
+        lazy: async () => ({
+          Component: (await import('@/features/playlists/PreviewPage')).PreviewPage,
+        }),
       },
     ],
   },
