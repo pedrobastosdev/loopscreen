@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module.js';
@@ -10,8 +11,12 @@ import { validateEnv, type Env } from './config/env.js';
 import { MediaModule } from './media/media.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { HealthModule } from './health/health.module.js';
+import { DevicesModule } from './devices/devices.module.js';
+import { PlayerModule } from './player/player.module.js';
 import { PlaylistsModule } from './playlists/playlists.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { RealtimeModule } from './realtime/realtime.module.js';
+import { ScreensModule } from './screens/screens.module.js';
 import { resolveWebDistDir, webStaticOptions } from './web/web-static.js';
 
 @Module({
@@ -21,6 +26,7 @@ import { resolveWebDistDir, webStaticOptions } from './web/web-static.js';
       throttlers: [{ name: 'default', ttl: 60_000, limit: 300 }],
       errorMessage: 'Muitas requisições. Aguarde um instante e tente novamente.',
     }),
+    ScheduleModule.forRoot(),
     ServeStaticModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) =>
@@ -31,6 +37,10 @@ import { resolveWebDistDir, webStaticOptions } from './web/web-static.js';
     StorageModule,
     MediaModule,
     PlaylistsModule,
+    RealtimeModule,
+    DevicesModule,
+    ScreensModule,
+    PlayerModule,
     HealthModule,
   ],
   providers: [
