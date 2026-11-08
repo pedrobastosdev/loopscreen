@@ -9,6 +9,13 @@ import { ScreensPage } from '@/features/screens/ScreensPage';
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   {
+    // Pública: autenticada pelo deviceToken, não pelo login do painel.
+    path: '/player',
+    lazy: async () => ({
+      Component: (await import('@/features/player/PlayerPage')).PlayerPage,
+    }),
+  },
+  {
     element: <RequireAuth />,
     children: [
       {
