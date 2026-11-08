@@ -3,6 +3,7 @@ import type { Media, Playlist, PlaylistItem } from '../generated/prisma/client.j
 import { toMediaDto } from '../media/media.service.js';
 import { buildManifest, type Manifest } from '../player/manifest.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { RealtimeService } from '../realtime/realtime.service.js';
 import { StorageService } from '../storage/storage.service.js';
 import type { PlaylistDetailDto, PlaylistSummaryDto, SavePlaylistDto } from './dto/playlist.dto.js';
 
@@ -22,21 +23,13 @@ type PlaylistWithItems = Playlist & {
   _count: { screens: number };
 };
 
-/** Avisado sempre que o conteúdo de uma playlist muda (as telas recarregam o manifest). */
-export type PlaylistChangeListener = (playlistId: string) => void;
-
 @Injectable()
 export class PlaylistsService {
-  private readonly listeners = new Set<PlaylistChangeListener>();
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly realtime: RealtimeService,
   ) {}
-
-  onChange(listener: PlaylistChangeListener): void {
-    this.listeners.add(listener);
-  }
 
   async list(): Promise<PlaylistSummaryDto[]> {
     const playlists = await this.prisma.playlist.findMany({
@@ -98,14 +91,19 @@ export class PlaylistsService {
       });
     });
 
-    this.emitChange(id);
+    // As telas que exibem esta playlist buscam o manifest novo na hora.
+    void this.realtime.playlistUpdated(id);
     return this.toDetail(playlist);
   }
 
   async remove(id: string): Promise<void> {
+    const screens = await this.prisma.screen.findMany({
+      where: { playlistId: id },
+      select: { id: true },
+    });
     await this.prisma.playlist.delete({ where: { id } });
     // As telas ficam sem playlist (onDelete: SetNull) e são avisadas.
-    this.emitChange(id);
+    this.realtime.notifyScreens(screens.map((s) => s.id));
   }
 
   async manifest(id: string): Promise<Manifest> {
@@ -117,10 +115,6 @@ export class PlaylistsService {
     const playlist = await this.prisma.playlist.findUnique({ where: { id }, include: withItems });
     if (!playlist) throw new NotFoundException('Playlist não encontrada');
     return playlist;
-  }
-
-  private emitChange(id: string): void {
-    for (const listener of this.listeners) listener(id);
   }
 
   private media(media: MediaWithCount) {

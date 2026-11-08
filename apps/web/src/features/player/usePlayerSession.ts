@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { deviceStorage } from './device-storage';
+import { useDeviceSocket } from './useDeviceSocket';
 import {
   fetchManifest,
   fetchStatus,
@@ -50,6 +51,7 @@ function sameManifest(a: PlayerManifest, b: PlayerManifest): boolean {
  */
 export function usePlayerSession() {
   const [state, setState] = useState<PlayerState>({ phase: 'starting' });
+  const [token, setToken] = useState<string | null>(() => deviceStorage.get());
   const timer = useRef<number | undefined>(undefined);
   const tickRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
@@ -75,6 +77,7 @@ export function usePlayerSession() {
     async function tick() {
       try {
         const token = await ensureToken();
+        if (!cancelled) setToken(token);
         try {
           const manifest = await fetchManifest(token);
           if (cancelled) return;
@@ -94,6 +97,7 @@ export function usePlayerSession() {
         if (error instanceof PlayerApiError && error.status === 401) {
           // Token desconhecido (tela removida no painel): registra de novo.
           deviceStorage.clear();
+          setToken(null);
           setState({ phase: 'starting' });
           schedule(500);
           return;
@@ -117,6 +121,14 @@ export function usePlayerSession() {
     window.clearTimeout(timer.current);
     void tickRef.current();
   }, []);
+
+  const unpaired = useCallback(() => {
+    deviceStorage.clear();
+    setToken(null);
+    refresh();
+  }, [refresh]);
+
+  useDeviceSocket(token, { onSync: refresh, onUnpaired: unpaired });
 
   return { state, refresh };
 }

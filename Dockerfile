@@ -34,8 +34,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # ── Imagem final ────────────────────────────────────────────────────────────
 FROM node:24-slim AS runner
 # openssl: exigido pelo schema engine do Prisma (migrate deploy)
+# tini: init mínimo; o Node não roda como PID 1 e encerra corretamente no SIGTERM
 RUN apt-get update \
- && apt-get install -y --no-install-recommends openssl ca-certificates \
+ && apt-get install -y --no-install-recommends openssl ca-certificates tini \
  && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production \
     PORT=3000 \
@@ -53,4 +54,4 @@ COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 WORKDIR /app/apps/api
 EXPOSE 3000
 # Inicia como root só para ajustar o dono do Volume; o entrypoint troca para "node".
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]

@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/features/auth/auth-context';
+import { useScreensRealtime } from '@/features/screens/useScreensRealtime';
 import { cn } from '@/lib/utils';
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
@@ -20,6 +21,7 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  useScreensRealtime();
   const initial = user?.email.charAt(0).toUpperCase() ?? '?';
 
   return (
