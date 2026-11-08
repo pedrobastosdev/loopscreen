@@ -1,0 +1,75 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Media {
+  id        String         @id @default(cuid())
+  name      String
+  type      MediaType
+  /// Chave do arquivo no storage (uuid + extensão). Nunca vem do cliente.
+  filename  String         @unique
+  mimeType  String
+  size      Int
+  createdAt DateTime       @default(now())
+  items     PlaylistItem[]
+}
+
+model Playlist {
+  id        String         @id @default(cuid())
+  name      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  items     PlaylistItem[]
+  screens   Screen[]
+}
+
+model PlaylistItem {
+  id          String   @id @default(cuid())
+  playlistId  String
+  mediaId     String
+  order       Int
+  /// Usado apenas para imagens. Vídeos tocam até o fim.
+  durationSec Int      @default(10)
+  playlist    Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  media       Media    @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([playlistId, order])
+  @@index([mediaId])
+}
+
+model Screen {
+  id               String    @id @default(cuid())
+  /// Nulo enquanto a tela não foi pareada.
+  name             String?
+  location         String?
+  /// sha256 do deviceToken. O token em texto puro só existe no dispositivo.
+  deviceTokenHash  String    @unique
+  pairingCode      String?   @unique
+  pairingExpiresAt DateTime?
+  pairedAt         DateTime?
+  lastSeenAt       DateTime?
+  playlistId       String?
+  playlist         Playlist? @relation(fields: [playlistId], references: [id], onDelete: SetNull)
+  createdAt        DateTime  @default(now())
+
+  @@index([pairedAt, createdAt])
+}

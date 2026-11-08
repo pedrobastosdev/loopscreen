@@ -1,0 +1,23 @@
+{
+  "name": "loopscreen",
+  "private": true,
+  "description": "Digital signage via navegador: telas, mídias e playlists em loop.",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --stream dev",
+    "build": "pnpm --filter @loopscreen/web build && pnpm --filter @loopscreen/api build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "pnpm --filter @loopscreen/api prisma:migrate",
+    "seed": "pnpm --filter @loopscreen/api seed",
+    "seed:demo": "pnpm --filter @loopscreen/api seed:demo"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}
