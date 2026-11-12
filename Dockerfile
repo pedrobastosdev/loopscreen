@@ -17,7 +17,7 @@ FROM base AS build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --config.side-effects-cache=false
+RUN pnpm install --frozen-lockfile --config.side-effects-cache=false
 COPY . .
 RUN pnpm --filter @loopscreen/api prisma:generate \
  && pnpm --filter @loopscreen/web build \
@@ -28,8 +28,7 @@ FROM base AS prod-deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --config.side-effects-cache=false --prod --filter @loopscreen/api
+RUN pnpm install --frozen-lockfile --config.side-effects-cache=false --prod --filter @loopscreen/api
 
 # ── Imagem final ────────────────────────────────────────────────────────────
 FROM node:24-slim AS runner
